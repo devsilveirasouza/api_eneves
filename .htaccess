@@ -1,0 +1,9 @@
+# Ativa o módulo de reescrita de URL
+RewriteEngine on
+
+# Verifica se o arquivo ou diretório não existe fisicamente
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+
+# Encaminha todas as solicitações para o arquivo index.php e passa a URL solicitada como parâmetro
+RewriteRule ^(.*)$ index.php?url=$1 [QSA]
