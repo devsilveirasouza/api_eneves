@@ -32,4 +32,17 @@ class Request
 
         return $data;
     }
+
+    public static function authorization()
+    {
+        $authorization = getallheaders();
+
+        if (!isset($authorization['Authorization'])) return ['error' => 'Sorry, no authorization header provided!'];
+
+        $authorizationPartials = explode(' ', $authorization['Authorization']);
+
+        if (count($authorizationPartials) != 2) return ['error' => 'Please, provide a valid authorization header'];
+
+        return $authorizationPartials[1] ?? '';
+    }
 }

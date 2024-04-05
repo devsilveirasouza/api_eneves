@@ -79,7 +79,36 @@ class UserController
      */
     public function fetch(Request $request, Response $response)
     {
-        // Implementação pendente.
+
+        $authorization = $request::authorization();
+
+        // Autentica o usuário através do serviço UserService.
+        $userService = UserService::fetch($authorization);
+
+        // Verifica se ocorreu algum erro durante a autenticação do usuário.
+        if (isset($userService['unauthorized'])) {
+            return $response::json([
+                'error' => true,
+                'success' => false,
+                'message' => $userService['unauthorized']
+            ], 401);
+        }
+
+        // Verifica se ocorreu algum erro durante a autenticação do usuário.
+        if (isset($userService['error'])) {
+            return $response::json([
+                'error' => true,
+                'success' => false,
+                'message' => $userService['error']
+            ], 400);
+        }
+
+        // Retorna o token de autenticação JWT do usuário.
+        return $response::json([
+            'error' => false,
+            'success' => true,
+            'jwt' => $userService
+        ], 200);
     }
 
     /**
@@ -91,7 +120,29 @@ class UserController
      */
     public function update(Request $request, Response $response)
     {
-        // Implementação pendente.
+
+        $authorization = $request::authorization();
+
+        $body = $request::body();
+
+        // Autentica o usuário através do serviço UserService.
+        $userService = UserService::update($authorization, $body);
+
+        // Verifica se ocorreu algum erro durante a autenticação do usuário.
+        if (isset($userService['error'])) {
+            return $response::json([
+                'error' => true,
+                'success' => false,
+                'message' => $userService['error']
+            ], 400);
+        }
+
+        // Retorna o token de autenticação JWT do usuário.
+        return $response::json([
+            'error' => false,
+            'success' => true,
+            'message' => $userService
+        ], 200);
     }
 
     /**
@@ -104,6 +155,25 @@ class UserController
      */
     public function remove(Request $request, Response $response, array $id)
     {
-        // Implementação pendente.
+        $authorization = $request::authorization();
+
+        // Autentica o usuário através do serviço UserService.
+        $userService = UserService::delete($authorization, $id[0]);
+
+        // Verifica se ocorreu algum erro durante a autenticação do usuário.
+        if (isset($userService['error'])) {
+            return $response::json([
+                'error' => true,
+                'success' => false,
+                'message' => $userService['error']
+            ], 400);
+        }
+
+        // Retorna o token de autenticação JWT do usuário.
+        return $response::json([
+            'error' => false,
+            'success' => true,
+            'message' => $userService
+        ], 200);
     }
 }

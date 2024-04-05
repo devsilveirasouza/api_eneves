@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\JWT;
 use App\Utils\Validator;
 use Exception;
 use PDOException;
@@ -62,9 +63,88 @@ class UserService
 
             if (!$user) return ['error' => 'Desculpe, não foi possível autenticar você.'];
 
-            return $user;
+            return JWT::generate($user);
         } catch (PDOException $e) {
             if ($e->errorInfo[0] === '08006') return ['error' => 'Desculpe, não foi possível conectar ao banco de dados.'];
+            return ['error' => $e->errorInfo[0]];
+        } catch (Exception $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    public static function fetch(mixed $authorization)
+    {
+        try {
+            if (isset($authorization['error'])) {
+                return ['unauthorized' => $authorization['error']];
+            }
+
+            $userFromJWT = JWT::verify($authorization);
+
+            if (!$userFromJWT) return ['unauthorized' => 'Please, login to access this resource.'];
+
+            $user = User::find($userFromJWT['id']);
+
+            if (!$user) return ['error' => 'Sorry, we could not find your account.'];
+
+            return $user;
+        } catch (PDOException $e) {
+            if ($e->errorInfo[0] == '08006') return ['error' => 'Sorry, we not could connect to the database.'];
+
+            return ['error' => $e->errorInfo[0]];
+        } catch (Exception $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    public static function update(mixed $authorization, array $data)
+    {
+        try {
+
+            if (isset($authorization['error'])) return ['error' => $authorization['error']];
+
+            $userFromJWT = JWT::verify($authorization);
+
+            if (!$userFromJWT) return ['error' => 'Please, login to access this resource.'];
+
+            $fields = Validator::validate([
+                'name' => $data['name'] ?? ''
+            ]);
+
+            $user = User::update($userFromJWT['id'], $fields);
+
+            if (!$user) return ['error' => 'Sorry, we could not update account.'];
+
+            return "User updated successfully!";
+
+        } catch (PDOException $e) {
+            if ($e->errorInfo[0] == '08006') return ['error' => 'Sorry, we not could connect to the database.'];
+
+            return ['error' => $e->errorInfo[0]];
+        } catch (Exception $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    public static function delete(mixed $authorization, int|string $id)
+    {
+        try {
+
+            if (isset($authorization['error'])) return ['error' => $authorization['error']];
+
+            $userFromJWT = JWT::verify($authorization);
+
+            if (!$userFromJWT) return ['error' => 'Please, login to access this resource.'];
+
+            $user = User::delete($id);
+
+            if (!$user) return ['error' => 'Sorry, we could not delete account.'];
+
+            return "User deleted successfully!";
+
+        } catch (PDOException $e) {
+            if ($e->errorInfo[0] == '08006') return ['error' => 'Sorry, we not could connect to the database.'];
+
             return ['error' => $e->errorInfo[0]];
         } catch (Exception $e) {
             return ['error' => $e->getMessage()];
